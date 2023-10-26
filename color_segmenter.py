@@ -47,9 +47,6 @@ def main():
         max_r = cv2.getTrackbarPos('Rmax', 'Color Mask')
     
     
-
-
-
         # Define os limites de cor com base nos valores das trackbars
         lower_bound = (min_b, min_g, min_r)
         upper_bound = (max_b, max_g, max_r)
