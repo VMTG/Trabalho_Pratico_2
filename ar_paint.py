@@ -3,6 +3,7 @@ import argparse
 import sys
 import cv2
 import numpy as np
+from datetime import datetime
 
 def initialization():
     # Definição dos argumentos de entrada:
@@ -66,6 +67,40 @@ def get_centroid(mask) :
         
     return (cX,cY), image_result 
 
+def key_press(input,canvas):
+    match input:
+            # quit program
+        case 'q':
+            return False
+            # change color to Red
+        case 'r':
+            draw_color = (0,0,255)
+            # change color to Green
+        case 'g':
+            draw_color = (0,255,0)
+            # change color to Blue
+        case 'b':
+            draw_color = (255,0,0)
+            # decrease pencil size
+        case '-':
+            if draw_thickness > 0:
+                draw_thickness -= 5
+            # increase pencil size
+        case '+':
+            if draw_thickness < 50:
+                draw_thickness += 5
+            #clear canvas
+        case 'c':
+            canvas.fill(255)
+            # save canvas 
+        case 'w':
+            date = datetime.now()
+            formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
+            name_canvas = 'canvas_' + formatted_date + '.png'
+            cv2.imwrite(name_canvas, canvas)
+    return True
+        
+
 def main():
     # setting up the video capture
     path, usp = initialization()
@@ -95,9 +130,9 @@ def main():
         (cx,cy),frame_test = get_centroid(frame_mask)
         cv2.imshow("test window", frame_test)
 
-        k = cv2.waitKey(1)
-        if k == ord('q'):   # wait for esckey to exit
-            break
+        k = cv2.waitKey(1) & 0xFF
+        if not key_press(str(chr(k)),paint_window) : break
+
     capture.release()
     cv2.destroyAllWindows()
 

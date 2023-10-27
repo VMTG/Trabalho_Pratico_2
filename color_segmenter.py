@@ -61,7 +61,7 @@ def main():
         key = cv2.waitKey(1)
         if key == ord('w'):
             # Salva os limites em um arquivo JSON
-            limits = {'limits': {'B': {'min': min_b, 'max': max_b}, 'G': {'min': min_g, 'max': max_g}, 'R': {'min': min_r, 'max': max_r}}}
+            limits = {'limits': {'B': {'max': max_b,'min': min_b}, 'G': { 'max': max_g, 'min': min_g}, 'R': {'max': max_r,'min': min_r}}}
         
 
             with open('limits.json', 'w') as file:
