@@ -96,7 +96,7 @@ def key_press(input,canvas):
         case 'w':
             date = datetime.now()
             formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
-            name_canvas = 'canvas_' + formatted_date + '.png'
+            name_canvas = 'drawing_' + formatted_date + '.png'
             cv2.imwrite(name_canvas, canvas)
     return True
         
