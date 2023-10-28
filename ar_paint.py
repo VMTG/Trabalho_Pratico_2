@@ -72,8 +72,6 @@ def get_centroid(mask) :
 
 def key_press(input,canvas):
     global draw_color, pencil_thickness
-    if input == chr(255):
-        print(input)
     match input:
             # quit program
         case 'q':
@@ -103,7 +101,9 @@ def key_press(input,canvas):
             date = datetime.now()
             formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
             name_canvas = 'drawing_' + formatted_date + '.png'
+            name_canvas_colored = 'drawing_' + formatted_date + '_colored.jpg'
             cv2.imwrite(name_canvas, canvas)
+            cv2.imwrite(name_canvas_colored, canvas)
     return True
         
 
