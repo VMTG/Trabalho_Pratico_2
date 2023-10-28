@@ -5,6 +5,9 @@ import cv2
 import numpy as np
 from datetime import datetime
 
+draw_color = (0,0,0)
+pencil_thickness = 5
+
 def initialization():
     # Definição dos argumentos de entrada:
     parser = argparse.ArgumentParser(description='Ar Paint ')
@@ -68,6 +71,9 @@ def get_centroid(mask) :
     return (cX,cY), image_result 
 
 def key_press(input,canvas):
+    global draw_color, pencil_thickness
+    if input == chr(255):
+        print(input)
     match input:
             # quit program
         case 'q':
@@ -83,12 +89,12 @@ def key_press(input,canvas):
             draw_color = (255,0,0)
             # decrease pencil size
         case '-':
-            if draw_thickness > 0:
-                draw_thickness -= 5
+            if pencil_thickness > 0:
+                pencil_thickness -= 5
             # increase pencil size
         case '+':
-            if draw_thickness < 50:
-                draw_thickness += 5
+            if pencil_thickness < 50:
+                pencil_thickness += 5
             #clear canvas
         case 'c':
             canvas.fill(255)
@@ -102,6 +108,7 @@ def key_press(input,canvas):
         
 
 def main():
+    global draw_color, pencil_thickness
     # setting up the video capture
     path, usp = initialization()
     ranges = readFile(path) 
@@ -111,7 +118,7 @@ def main():
     cv2.imshow("Original window",frame)
 
     height,width,_ = np.shape(frame)
-    paint_window = np.zeros((height,width))
+    paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
 
@@ -133,6 +140,15 @@ def main():
         k = cv2.waitKey(1) & 0xFF
         if not key_press(str(chr(k)),paint_window) : break
 
+        # 1st way - line connecting the current point to the previous position
+        try:
+            cv2.line(paint_window, (cx,cy),(cx_past,cy_past), draw_color, pencil_thickness) 
+            cx_past, cy_past = cx ,cy
+        except:
+            cx_past, cy_past = cx ,cy
+        # 2nd way - circle in the current position (skips due to reading delay)
+        # cv2.circle(paint_window, (cx,cy), 1, draw_color, pencil_thickness) 
+        cv2.imshow("Paint Window",paint_window)
     capture.release()
     cv2.destroyAllWindows()
 
