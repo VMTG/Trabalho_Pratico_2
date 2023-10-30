@@ -3,6 +3,7 @@ import argparse
 import sys
 import cv2
 import numpy as np
+from math import sqrt
 from datetime import datetime
 
 draw_color = (255,255,255)
@@ -70,8 +71,9 @@ def get_centroid(mask) :
         
     return (cX,cY), image_result 
 
-def key_press(key_input,canvas):
-    global draw_color, pencil_thickness
+def key_press(key_input,canvas,coord):
+    global draw_color, pencil_thickness, origin_coord
+    temp_canvas = canvas.copy()
         # quit program
     if key_input == 'q':
         return False
@@ -103,18 +105,31 @@ def key_press(key_input,canvas):
         name_canvas_colored = 'drawing_' + formatted_date + '_colored.jpg'
         cv2.imwrite(name_canvas, canvas)
         cv2.imwrite(name_canvas_colored, canvas)
+    elif key_input == 's':
+        try:
+            cv2.rectangle(temp_canvas,[ox,oy],coord,draw_color,pencil_thickness)
+        except:
+            [ox,oy] = coord
+    elif key_input == 'o':
+        try:
+            difx = coord[0] - ox
+            dify = coord[1] - oy
+            radious = round(sqrt(difx**2 + dify**2))
+            cv2.circle(temp_canvas,(ox,oy),radious,draw_color,pencil_thickness)
+        except:
+            [ox,oy] = coord
+    elif key_input == 'e':
+        try:
+            meanx = (coord[0]-ox)/2
+            meany = (coord[1]-oy)/2
+            center = (round(meanx + ox), round(meany + oy))
+            axes = (round(abs(meanx)), round(abs(meany)))
+            cv2.ellipse(temp_canvas,center,axes,0,0,360,draw_color,pencil_thickness)
+        except:
+            [ox,oy] = coord
+        
     return True
         
-
-class Draw_Figure:
-    
-    def __init__(self,figure_type,position,old_position,colour,thickness):
-        self.type = figure_type
-        self.thickness = thickness
-        self.color = colour
-        self.position = position
-        self.old_position = old_position
-
 
 def main():
     global draw_color, pencil_thickness
@@ -141,11 +156,11 @@ def main():
         frame_wMask = cv2.bitwise_and(frame,frame, mask = frame_mask)
         cv2.imshow("Original Window + Mask applied",frame_wMask)
         
-        (cx,cy),frame_test = get_centroid(frame_mask)
+        [cx,cy],frame_test = get_centroid(frame_mask)
         cv2.imshow("Centroid window", frame_test)
 
         k = cv2.waitKey(1) & 0xFF
-        if not key_press(str(chr(k)),paint_window) : break
+        if not key_press(str(chr(k)),paint_window,[cx,cy]) : break
 
         # 1st way - line connecting the current point to the previous position
         try:
@@ -156,6 +171,8 @@ def main():
         # 2nd way - circle in the current position (skips due to delay)
         # cv2.circle(paint_window, (cx,cy), 1, draw_color, pencil_thickness) 
         cv2.imshow("Canvas Window",paint_window)
+
+
     capture.release()
     cv2.destroyAllWindows()
 
