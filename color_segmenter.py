@@ -34,7 +34,7 @@ def main():
           break
 
         # Converte a imagem para o espaço de cores HSV 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Obtenha os valores atuais das trackbars
         min_b = cv2.getTrackbarPos('Bmin', 'Color Mask')
@@ -52,7 +52,7 @@ def main():
         upper_bound = (max_b, max_g, max_r)
 
          # Cria uma máscara para a detecção de cor
-        mask = cv2.inRange(hsv, lower_bound, upper_bound)
+        mask = cv2.inRange(frame, lower_bound, upper_bound)
  
         # Atualiza as janelas OpenCV
         cv2.imshow('Original Image', cv2.flip(frame,1))
