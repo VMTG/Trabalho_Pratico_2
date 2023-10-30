@@ -34,7 +34,7 @@ def main():
           break
 
         # Converte a imagem para o espaço de cores HSV 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Obtenha os valores atuais das trackbars
         min_b = cv2.getTrackbarPos('Bmin', 'Color Mask')

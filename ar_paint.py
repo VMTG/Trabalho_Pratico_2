@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+#shebang line to inform the OS that the content is in python
+
+#!/usr/bin/env python3
+
 import json
 import argparse
 import sys
@@ -6,13 +11,13 @@ import numpy as np
 from math import sqrt
 from datetime import datetime
 
-draw_color = (255,255,255)
+draw_color = (0,0,0)
 pencil_thickness = 5
 
 def initialization():
     # Definição dos argumentos de entrada:
     parser = argparse.ArgumentParser(description='Ar Paint ')
-    parser.add_argument('-j','--json',type = str, required= True, help='Full path to json file')
+    parser.add_argument('-j','--json',type = str, required= False , help='Full path to json file', default='limits.json')
     parser.add_argument('-usp','--use_shake_prevention', action='store_true', help='Use shake prevention mode')
     args = vars(parser.parse_args())
 
@@ -75,30 +80,30 @@ def key_press(key_input,canvas,coord):
     global draw_color, pencil_thickness, origin_coord
     temp_canvas = canvas.copy()
         # quit program
-    if key_input == 'q':
+    if input=='q':
         return False
         # change color to Red
-    elif key_input == 'r':
+    elif input=='r':
         draw_color = (0,0,255)
         # change color to Green
-    elif key_input == 'g':
+    elif input=='g':
         draw_color = (0,255,0)
         # change color to Blue
-    elif key_input == 'b':
+    elif input=='b':
         draw_color = (255,0,0)
         # decrease pencil size
-    elif key_input == '-':
+    elif input=='-':
         if pencil_thickness > 0:
             pencil_thickness -= 5
         # increase pencil size
-    elif key_input == '+':
+    elif input=='+':
         if pencil_thickness < 50:
             pencil_thickness += 5
         #clear canvas
-    elif key_input == 'c':
+    elif input=='c':
         canvas.fill(255)
         # save canvas 
-    elif key_input == 'w':
+    elif input=='w':
         date = datetime.now()
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
         name_canvas = 'drawing_' + formatted_date + '.png'
@@ -130,6 +135,7 @@ def key_press(key_input,canvas,coord):
         
     return True
         
+        
 
 def main():
     global draw_color, pencil_thickness
@@ -139,22 +145,25 @@ def main():
 
     capture = cv2.VideoCapture(0)
     _, frame = capture.read()
+    cv2.imshow("Original window",frame)
 
     height,width,_ = np.shape(frame)
     paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
-    cv2.imshow("Canvas Window",paint_window)
+    cv2.imshow("Paint Window",paint_window)
 
-    range_lows = (ranges['B']['min'], ranges['G']['min'], ranges['R']['min'])
-    range_highs = (ranges['B']['max'], ranges['G']['max'], ranges['R']['max'])
+    range_lows = (ranges['R']['min'], ranges['G']['min'], ranges['B']['min'])
+    range_highs = (ranges['R']['max'], ranges['G']['max'], ranges['B']['max'])
         
     ## Operação em contínuo ##
     while True:
         _,frame = capture.read()
-        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        frame_mask = cv2.inRange(frame, range_lows, range_highs)
-        frame_wMask = cv2.bitwise_and(frame,frame, mask = frame_mask)
-        cv2.imshow("Original Window + Mask applied",frame_wMask)
+        frame1 = cv2.flip(frame, 1)
+        
+        frame_mask = cv2.inRange(frame1, range_lows, range_highs)
+
+        frame_wMask = cv2.bitwise_and(frame1,frame1, mask = frame_mask)
+        cv2.imshow("Original window",frame_wMask)
         
         [cx,cy],frame_test = get_centroid(frame_mask)
         cv2.imshow("Centroid window", frame_test)
@@ -164,15 +173,13 @@ def main():
 
         # 1st way - line connecting the current point to the previous position
         try:
-            cv2.line(paint_window, (cx,cy),(cx_past,cy_past), draw_color, pencil_thickness) 
+            cv2.line(frame1, (cx,cy),(cx_past,cy_past), draw_color, pencil_thickness) 
             cx_past, cy_past = cx ,cy
         except:
             cx_past, cy_past = cx ,cy
-        # 2nd way - circle in the current position (skips due to delay)
+        # 2nd way - circle in the current position (skips due to reading delay)
         # cv2.circle(paint_window, (cx,cy), 1, draw_color, pencil_thickness) 
-        cv2.imshow("Canvas Window",paint_window)
-
-
+        cv2.imshow("Paint Window",frame1)
     capture.release()
     cv2.destroyAllWindows()
 
