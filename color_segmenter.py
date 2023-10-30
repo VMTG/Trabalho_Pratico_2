@@ -52,7 +52,7 @@ def main():
         upper_bound = (max_b, max_g, max_r)
 
          # Cria uma máscara para a detecção de cor
-        mask = cv2.inRange(hsv, lower_bound, upper_bound)
+        mask = cv2.inRange(frame, lower_bound, upper_bound)
  
         # Atualiza as janelas OpenCV
         cv2.imshow('Original Image', cv2.flip(frame,1))
