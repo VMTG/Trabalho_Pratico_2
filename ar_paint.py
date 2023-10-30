@@ -134,7 +134,6 @@ def redraw_painting(frame, figures):
         elif figure.type == "ellipse":
             meanx = (figure.coord_final[0] - figure.coord_origin[0])/2
             meany = (figure.coord_final[1] - figure.coord_origin[1])/2
-            print("means: ", meanx,meany)
             center = (round(meanx + figure.coord_origin[0]), round(meany + figure.coord_origin[1]))
             axes = (round(abs(meanx)), round(abs(meany)))
             cv2.ellipse(frame,center,axes,0,0,360,figure.color,figure.thickness)
