@@ -120,10 +120,9 @@ def main():
 
     capture = cv2.VideoCapture(0)
     _, frame = capture.read()
-    frame1 = cv2.flip(frame, 1)
-    cv2.imshow("Original window",frame1)
+    cv2.imshow("Original window",frame)
 
-    height,width,_ = np.shape(frame1)
+    height,width,_ = np.shape(frame)
     paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
