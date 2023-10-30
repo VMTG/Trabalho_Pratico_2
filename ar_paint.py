@@ -11,19 +11,21 @@ import numpy as np
 from math import sqrt
 from datetime import datetime
 
-draw_color = (0,0,0)
+draw_color = (255,255,255)
 pencil_thickness = 5
 
 def initialization():
-    # Definição dos argumentos de entrada:
+    # Input Arguments
     parser = argparse.ArgumentParser(description='Ar Paint ')
     parser.add_argument('-j','--json',type = str, required= False , help='Full path to json file', default='limits.json')
     parser.add_argument('-usp','--use_shake_prevention', action='store_true', help='Use shake prevention mode')
+    parser.add_argument('-ucc','--use_cam_canvas', action='store_true', help='Use camera as canvas')
     args = vars(parser.parse_args())
 
-    path = 'limits.json' if not args['json'] else args['json'] # A localização do ficheiro json
-    usp = args['use_shake_prevention'] # Ativacao do use shake mode
-    return path , usp
+    path = 'limits.json' if not args['json'] else args['json'] # Path for the json file
+    usp = args['use_shake_prevention'] # Shake prevention mode
+    ucc = args['use_cam_canvas'] # Use live feed from the cam to be used as the canvas
+    return path , usp, ucc
 
 def readFile(path):
     try:
@@ -76,71 +78,77 @@ def get_centroid(mask) :
         
     return (cX,cY), image_result 
 
-def key_press(key_input,canvas,coord):
-    global draw_color, pencil_thickness, origin_coord
-    temp_canvas = canvas.copy()
+def key_press(key_input,canvas):
+    global draw_color, pencil_thickness
         # quit program
-    if input=='q':
+    if key_input=='q':
         return False
         # change color to Red
-    elif input=='r':
+    elif key_input=='r':
         draw_color = (0,0,255)
         # change color to Green
-    elif input=='g':
+    elif key_input=='g':
         draw_color = (0,255,0)
         # change color to Blue
-    elif input=='b':
+    elif key_input=='b':
         draw_color = (255,0,0)
         # decrease pencil size
-    elif input=='-':
+    elif key_input=='-':
         if pencil_thickness > 0:
             pencil_thickness -= 5
         # increase pencil size
-    elif input=='+':
+    elif key_input=='+':
         if pencil_thickness < 50:
             pencil_thickness += 5
-        #clear canvas
-    elif input=='c':
-        canvas.fill(255)
         # save canvas 
-    elif input=='w':
+    elif key_input=='w':
         date = datetime.now()
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
         name_canvas = 'drawing_' + formatted_date + '.png'
         name_canvas_colored = 'drawing_' + formatted_date + '_colored.jpg'
         cv2.imwrite(name_canvas, canvas)
         cv2.imwrite(name_canvas_colored, canvas)
-    elif key_input == 's':
-        try:
-            cv2.rectangle(temp_canvas,[ox,oy],coord,draw_color,pencil_thickness)
-        except:
-            [ox,oy] = coord
-    elif key_input == 'o':
-        try:
-            difx = coord[0] - ox
-            dify = coord[1] - oy
-            radious = round(sqrt(difx**2 + dify**2))
-            cv2.circle(temp_canvas,(ox,oy),radious,draw_color,pencil_thickness)
-        except:
-            [ox,oy] = coord
-    elif key_input == 'e':
-        try:
-            meanx = (coord[0]-ox)/2
-            meany = (coord[1]-oy)/2
-            center = (round(meanx + ox), round(meany + oy))
-            axes = (round(abs(meanx)), round(abs(meany)))
-            cv2.ellipse(temp_canvas,center,axes,0,0,360,draw_color,pencil_thickness)
-        except:
-            [ox,oy] = coord
         
     return True
-        
-        
 
+class Figure:
+
+    def __init__(self,type,origin,final,colour,thickness):
+        self.type = type
+        self.coord_origin = origin
+        self.coord_final = final
+        self.color = colour
+        self.thickness = thickness
+
+def redraw_painting(frame, figures):
+    for figure in figures:
+        if figure.type == "square":
+            cv2.rectangle(frame,figure.coord_origin,figure.coord_final,figure.color,figure.thickness)
+        
+        elif figure.type == "circle":
+            difx = figure.coord_final[0] - figure.coord_origin[0]
+            dify = figure.coord_final[1] - figure.coord_origin[1]
+            radious = round(sqrt(difx**2 + dify**2))
+            cv2.circle(frame,figure.coord_origin,radious,figure.color,figure.thickness) 
+
+        elif figure.type == "ellipse":
+            meanx = (figure.coord_final[0] - figure.coord_origin[0])/2
+            meany = (figure.coord_final[1] - figure.coord_origin[1])/2
+            print("means: ", meanx,meany)
+            center = (round(meanx + figure.coord_origin[0]), round(meany + figure.coord_origin[1]))
+            axes = (round(abs(meanx)), round(abs(meany)))
+            cv2.ellipse(frame,center,axes,0,0,360,figure.color,figure.thickness)
+        
+        elif figure.type == "line":
+            cv2.line(frame, figure.coord_origin,figure.coord_final, figure.color,figure.thickness)
+        
+        elif figure.type == "dot":        
+            cv2.circle(frame, figure.coord_final, 1, figure.color,figure.thickness) 
+               
 def main():
     global draw_color, pencil_thickness
     # setting up the video capture
-    path, usp = initialization()
+    path, usp, ucc = initialization()
     ranges = readFile(path) 
 
     capture = cv2.VideoCapture(0)
@@ -151,35 +159,60 @@ def main():
     paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
-
+    
     range_lows = (ranges['R']['min'], ranges['G']['min'], ranges['B']['min'])
     range_highs = (ranges['R']['max'], ranges['G']['max'], ranges['B']['max'])
-        
+    
+    draw_moves = []
+
     ## Operação em contínuo ##
     while True:
         _,frame = capture.read()
-        frame1 = cv2.flip(frame, 1)
+        flipped_frame = cv2.flip(frame, 1)
+        paint_window.fill(255)
+        if ucc: 
+            operating_frame = flipped_frame
+        else:
+            operating_frame = paint_window
         
-        frame_mask = cv2.inRange(frame1, range_lows, range_highs)
+        frame_mask = cv2.inRange(flipped_frame, range_lows, range_highs)
 
-        frame_wMask = cv2.bitwise_and(frame1,frame1, mask = frame_mask)
+        frame_wMask = cv2.bitwise_and(flipped_frame,flipped_frame, mask = frame_mask)
         cv2.imshow("Original window",frame_wMask)
         
         [cx,cy],frame_test = get_centroid(frame_mask)
         cv2.imshow("Centroid window", frame_test)
 
         k = cv2.waitKey(1) & 0xFF
-        if not key_press(str(chr(k)),paint_window,[cx,cy]) : break
 
-        # 1st way - line connecting the current point to the previous position
-        try:
-            cv2.line(frame1, (cx,cy),(cx_past,cy_past), draw_color, pencil_thickness) 
-            cx_past, cy_past = cx ,cy
-        except:
-            cx_past, cy_past = cx ,cy
-        # 2nd way - circle in the current position (skips due to reading delay)
-        # cv2.circle(paint_window, (cx,cy), 1, draw_color, pencil_thickness) 
-        cv2.imshow("Paint Window",frame1)
+        key_chr = str(chr(k))
+        if not key_press(key_chr,operating_frame): break
+
+        
+        if key_chr == "s":
+            draw_moves[len(draw_moves)-1] = (Figure("square",[cox,coy],[cx,cy],draw_color,pencil_thickness))
+            cx_last,cy_last = cx,cy
+        elif key_chr == "o":
+            draw_moves[len(draw_moves)-1] = (Figure("circle",[cox,coy],[cx,cy],draw_color,pencil_thickness))
+            cx_last,cy_last = cx,cy
+        elif key_chr == "e":
+            draw_moves[len(draw_moves)-1] = (Figure("ellipse",[cox,coy],[cx,cy],draw_color,pencil_thickness))
+            cx_last,cy_last = cx,cy
+        elif key_chr == 'c':
+            draw_moves = []
+            cx_last,cy_last = cx,cy
+        else:
+            try:
+                draw_moves.append(Figure("line",[cx_last,cy_last],[cx,cy],draw_color,pencil_thickness))
+            except:
+                cx_last,cy_last = cx,cy
+        redraw_painting(operating_frame,draw_moves)
+        if k == 0xFF:
+            cox,coy = cx,cy
+            cx_last,cy_last = cx,cy
+
+        cv2.imshow("Paint Window",operating_frame)
+
     capture.release()
     cv2.destroyAllWindows()
 
