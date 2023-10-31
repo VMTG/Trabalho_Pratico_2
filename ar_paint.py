@@ -121,28 +121,28 @@ class Figure:
         self.thickness = thickness
 
 def redraw_painting(frame, figures):
-    for figure in figures:
-        if figure.type == "square":
-            cv2.rectangle(frame,figure.coord_origin,figure.coord_final,figure.color,figure.thickness)
+    for step in figures:
+        if step.type == "square":
+            cv2.rectangle(frame,step.coord_origin,step.coord_final,step.color,step.thickness)
         
-        elif figure.type == "circle":
-            difx = figure.coord_final[0] - figure.coord_origin[0]
-            dify = figure.coord_final[1] - figure.coord_origin[1]
+        elif step.type == "circle":
+            difx = step.coord_final[0] - step.coord_origin[0]
+            dify = step.coord_final[1] - step.coord_origin[1]
             radious = round(sqrt(difx**2 + dify**2))
-            cv2.circle(frame,figure.coord_origin,radious,figure.color,figure.thickness) 
+            cv2.circle(frame,step.coord_origin,radious,step.color,step.thickness) 
 
-        elif figure.type == "ellipse":
-            meanx = (figure.coord_final[0] - figure.coord_origin[0])/2
-            meany = (figure.coord_final[1] - figure.coord_origin[1])/2
-            center = (round(meanx + figure.coord_origin[0]), round(meany + figure.coord_origin[1]))
+        elif step.type == "ellipse":
+            meanx = (step.coord_final[0] - step.coord_origin[0])/2
+            meany = (step.coord_final[1] - step.coord_origin[1])/2
+            center = (round(meanx + step.coord_origin[0]), round(meany + step.coord_origin[1]))
             axes = (round(abs(meanx)), round(abs(meany)))
-            cv2.ellipse(frame,center,axes,0,0,360,figure.color,figure.thickness)
+            cv2.ellipse(frame,center,axes,0,0,360,step.color,step.thickness)
         
-        elif figure.type == "line":
-            cv2.line(frame, figure.coord_origin,figure.coord_final, figure.color,figure.thickness)
+        elif step.type == "line":
+            cv2.line(frame, step.coord_origin,step.coord_final, step.color,step.thickness)
         
-        elif figure.type == "dot":        
-            cv2.circle(frame, figure.coord_final, 1, figure.color,figure.thickness) 
+        elif step.type == "dot":        
+            cv2.circle(frame, step.coord_final, 1, step.color,step.thickness) 
                
 def main():
     global draw_color, pencil_thickness
@@ -159,11 +159,11 @@ def main():
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
     
-    range_lows = (ranges['R']['min'], ranges['G']['min'], ranges['B']['min'])
-    range_highs = (ranges['R']['max'], ranges['G']['max'], ranges['B']['max'])
+    range_lows = (ranges['B']['min'], ranges['G']['min'], ranges['R']['min'])
+    range_highs = (ranges['B']['max'], ranges['G']['max'], ranges['R']['max'])
     
     draw_moves = []
-
+    flag_draw = False
     ## Operação em contínuo ##
     while True:
         _,frame = capture.read()
@@ -179,7 +179,7 @@ def main():
         frame_wMask = cv2.bitwise_and(flipped_frame,flipped_frame, mask = frame_mask)
         cv2.imshow("Original window",frame_wMask)
         
-        [cx,cy],frame_test = get_centroid(frame_mask)
+        (cx,cy),frame_test = get_centroid(frame_mask)
         cv2.imshow("Centroid window", frame_test)
 
         k = cv2.waitKey(1) & 0xFF
@@ -187,28 +187,34 @@ def main():
         key_chr = str(chr(k))
         if not key_press(key_chr,operating_frame): break
 
-        
-        if key_chr == "s":
-            draw_moves[len(draw_moves)-1] = (Figure("square",[cox,coy],[cx,cy],draw_color,pencil_thickness))
-            cx_last,cy_last = cx,cy
-        elif key_chr == "o":
-            draw_moves[len(draw_moves)-1] = (Figure("circle",[cox,coy],[cx,cy],draw_color,pencil_thickness))
-            cx_last,cy_last = cx,cy
-        elif key_chr == "e":
-            draw_moves[len(draw_moves)-1] = (Figure("ellipse",[cox,coy],[cx,cy],draw_color,pencil_thickness))
-            cx_last,cy_last = cx,cy
-        elif key_chr == 'c':
-            draw_moves = []
-            cx_last,cy_last = cx,cy
-        else:
-            try:
-                draw_moves.append(Figure("line",[cx_last,cy_last],[cx,cy],draw_color,pencil_thickness))
-            except:
-                cx_last,cy_last = cx,cy
-        redraw_painting(operating_frame,draw_moves)
-        if k == 0xFF:
-            cox,coy = cx,cy
-            cx_last,cy_last = cx,cy
+        if key_chr == "d":
+            flag_draw = True
+
+        if flag_draw :
+            if (cx,cy) != (None,None):
+                if key_chr == "s":
+                    draw_moves[len(draw_moves)-1] = (Figure("square",(cox,coy),(cx,cy),draw_color,pencil_thickness))
+                    cx_last,cy_last = cx,cy
+                elif key_chr == "o":
+                    draw_moves[len(draw_moves)-1] = (Figure("circle",(cox,coy),(cx,cy),draw_color,pencil_thickness))
+                    cx_last,cy_last = cx,cy
+                elif key_chr == "e":
+                    draw_moves[len(draw_moves)-1] = (Figure("ellipse",(cox,coy),(cx,cy),draw_color,pencil_thickness))
+                    cx_last,cy_last = cx,cy
+                elif key_chr == 'c':
+                    draw_moves = []
+                    cx_last,cy_last = cx,cy
+                else:
+                    try:
+                        draw_moves.append(Figure("line",(cx_last,cy_last),(cx,cy),draw_color,pencil_thickness))
+                    except:
+                        cx_last,cy_last = cx,cy
+                if k == 0xFF:
+                    cox,coy = cx,cy
+                    cx_last,cy_last = cx,cy
+    
+            redraw_painting(operating_frame,draw_moves)
+            
 
         cv2.imshow("Paint Window",operating_frame)
 
