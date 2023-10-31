@@ -22,12 +22,15 @@ def initialization():
     parser.add_argument('-j','--json',type = str, required= False , help='Full path to json file', default='limits.json')
     parser.add_argument('-usp','--use_shake_prevention', action='store_true', help='Use shake prevention mode, change shake prevention threshold using , and .')
     parser.add_argument('-ucc','--use_cam_canvas', action='store_true', help='Use camera as canvas')
+    parser.add_argument('-um','--use_mouse', action='store_true', help='Use mouse as the pencil')
     args = vars(parser.parse_args())
+   
 
     path = 'limits.json' if not args['json'] else args['json'] # Path for the json file
     usp = args['use_shake_prevention'] # Shake prevention mode
     ucc = args['use_cam_canvas'] # Use live feed from the cam to be used as the canvas
-    return path , usp, ucc
+    um = args['use_mouse'] # Use mouse as the pencil
+    return path, usp, ucc, um
 
 def readFile(path):
     try:
@@ -161,11 +164,25 @@ def redraw_painting(frame, figures):
         
         elif step.type == "dot":        
             cv2.circle(frame, step.coord_final, 1, step.color,step.thickness) 
+
+class Mouse:
+    
+    def __init__(self):
+        self.coords = (None,None)
+        self.pressed = False
+
+    def update_mouse(self,event,x,y,flags,param):
+        self.coords = (x,y)
+
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.pressed = True
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.pressed = False
                
 def main():
     global draw_color, pencil_thickness
     # setting up the video capture
-    path, usp, ucc = initialization()
+    path, usp, use_cam, use_mouse = initialization()
     ranges = readFile(path) 
 
     capture = cv2.VideoCapture(0)
@@ -183,12 +200,16 @@ def main():
     draw_moves = []
     flag_draw = False
 
+    if use_mouse:
+        mouse = Mouse()
+        cv2.setMouseCallback("Paint Window", mouse.update_mouse)
+
     ## Operação em contínuo ##
     while True:
         _,frame = capture.read()
         flipped_frame = cv2.flip(frame, 1)
         paint_window.fill(255)
-        if ucc: 
+        if use_cam: 
             operating_frame = flipped_frame
         else:
             operating_frame = paint_window
@@ -197,10 +218,19 @@ def main():
 
         frame_wMask = cv2.bitwise_and(flipped_frame,flipped_frame, mask = frame_mask)
         cv2.imshow("Original window",frame_wMask)
-        
-        (cx,cy),frame_test,skip = get_centroid(frame_mask)
-        cv2.imshow("Centroid window", frame_test)
-        if skip: continue
+
+        if not use_mouse:    
+            (cx,cy),frame_test,skip = get_centroid(frame_mask)
+            cv2.imshow("Centroid window", frame_test)
+            if skip: continue
+        else:
+            cx = mouse.coords[0]
+            cy = mouse.coords[1]
+            
+            if cx:
+                cv2.line(operating_frame, (cx-5, cy-5), (cx+5, cy+5), (0, 0, 255), 5)
+                cv2.line(operating_frame, (cx+5, cy-5), (cx-5, cy+5), (0, 0, 255), 5)
+    
 
         k = cv2.waitKey(1) & 0xFF
 
