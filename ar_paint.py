@@ -107,20 +107,25 @@ def key_Press(key_input,canvas,draw_moves):
         draw_color = (0,0,255)
         # change color to Green
     elif key_input=='g':
+        print("Changed Color to Green")
         draw_color = (0,255,0)
         # change color to Blue
     elif key_input=='b':
+        print("Changed Color to Blue")
         draw_color = (255,0,0)
         # decrease pencil size
     elif key_input=='-':
         if pencil_thickness > 0:
             pencil_thickness -= 5
+            print("Decrease pencil size")
         # increase pencil size
     elif key_input=='+':
         if pencil_thickness < 50:
             pencil_thickness += 5
+            print("Increase pencil size")
         # save canvas 
     elif key_input=='w' and draw_moves != []:
+        print("Save obtained drawing")
         date = datetime.now()
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
         name_canvas = 'drawing_' + formatted_date + '.png'
@@ -131,10 +136,12 @@ def key_Press(key_input,canvas,draw_moves):
     elif key_input==',':
         if shake_threshold > 0:
             shake_threshold -= 50 
+            print("Decrease shake threshold")
             print("Shake prevension Threshold: ",shake_threshold/max_threshold*100,"%")
     elif key_input=='.':
         if shake_threshold < (max_threshold-50):
             shake_threshold += 50
+            print("Increase shake threshold")
             print("Shake prevension Threshold: ",shake_threshold/max_threshold*100,"%")
     return True
 
@@ -219,7 +226,7 @@ def colors_Legend(num_colors, accuracy = None):
         cv2.putText(legend, str(i+1) + ' - ' + colour, (50, 50+50*i), cv2.FONT_HERSHEY_SIMPLEX, 0.9, num_colors[i], 2)
 
     if accuracy!=None:
-        cv2.putText(legend, 'Accuracy: ' + str(accuracy) + '%', (50, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+        cv2.putText(legend, 'Accuracy: ' + str(accuracy) + '%', (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
     
     return legend
 
@@ -295,6 +302,7 @@ def main():
     flag_draw = False
 
     if use_grid:
+        print('Using grid as a canvas')
         zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
         color_numbers = []
@@ -308,9 +316,18 @@ def main():
         cv2.moveWindow(color_window, 100, 600)
         cv2.imshow(color_window, stats)
 
+    if not use_cam and not use_grid:
+        print('Using a white canvas as a canvas') 
+
+    if use_cam:
+        print('Using camera frames as a canvas') 
+
     if use_mouse:
+        print('Using the mouse to paint')
         mouse = Mouse()
         cv2.setMouseCallback("Paint Window", mouse.update_mouse)
+    elif not use_mouse:
+        print('Using an object to paint') 
 
     ## Operação em contínuo ##
     while True:
@@ -331,7 +348,7 @@ def main():
         frame_wMask = cv2.bitwise_and(flipped_frame,flipped_frame, mask = frame_mask)
         
 
-        if not use_mouse:    
+        if not use_mouse:  
             (cx,cy),frame_test,skip = get_Centroid(frame_mask)
             cv2.imshow("Centroid window", frame_test)
             cv2.moveWindow("Centroid window", 1360, 10)
@@ -365,6 +382,7 @@ def main():
                     draw_moves[len(draw_moves)-1] = (Figure("ellipse",(cox,coy),(cx,cy),draw_color,pencil_thickness))
                     cx_last,cy_last = cx,cy
                 elif key_chr == 'c':
+                    print('Clear canvas')
                     draw_moves = []
                     cx_last,cy_last = cx,cy
                 else:
@@ -391,6 +409,7 @@ def main():
                 stats = colors_Legend(numbers_to_colors, accuracy)
                 cv2.imshow(color_window, stats)
             if key_chr == 'c':
+                print('Clear canvas')
                 draw_moves = []
             cx_last,cy_last = cx,cy
 
