@@ -6,20 +6,36 @@
 import cv2
 import json
 
-# Crie uma função para o callback das trackbars para atualizar os limites de cor
+# Create a function for the trackbar callback to update the color limits
 def update_limits(x):
     pass
 
-# Inicialize a captura de vídeo da câmera
-cap = cv2.VideoCapture(0)
+
 
 
 def main():
-    #Crie janelas OpenCV para mostrar a imagem original e a máscara de segmentação
-    cv2.namedWindow('Original Image')
-    cv2.namedWindow('Color Mask')
 
-    # Crie trackbars para os limites de cor
+    # setting up the video capture
+    cap = cv2.VideoCapture(0)
+    _, frame = cap.read()
+    
+    #dimensions for both windows
+    scale_x = 0.72
+    scale_y = 0.9
+    window_width = int(frame.shape[1] * scale_x)
+    window_height = int(frame.shape[0] * scale_y)
+    
+    #Create OpenCV windows to show the original image and segmentation mask
+    window_name = 'Original Image'
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, window_width, window_height)
+    cv2.moveWindow(window_name, 5, 200)
+    mask_window = 'Color Mask'
+    cv2.namedWindow(mask_window, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(mask_window, window_width, window_height)
+    cv2.moveWindow(mask_window, 1000, 200)
+
+    # Create trackbars for color limits
     cv2.createTrackbar('Bmin', 'Color Mask', 0, 255, update_limits)
     cv2.createTrackbar('Bmax', 'Color Mask', 255, 255, update_limits)
     cv2.createTrackbar('Gmin', 'Color Mask', 0, 255, update_limits)
@@ -36,7 +52,7 @@ def main():
         # Converte a imagem para o espaço de cores HSV 
         #hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
-        # Obtenha os valores atuais das trackbars
+        # Get current trackbar values
         min_b = cv2.getTrackbarPos('Bmin', 'Color Mask')
         max_b = cv2.getTrackbarPos('Bmax', 'Color Mask')
 
@@ -47,20 +63,20 @@ def main():
         max_r = cv2.getTrackbarPos('Rmax', 'Color Mask')
     
     
-        # Define os limites de cor com base nos valores das trackbars
+        # Sets color limits based on trackbar values
         lower_bound = (min_b, min_g, min_r)
         upper_bound = (max_b, max_g, max_r)
 
-         # Cria uma máscara para a detecção de cor
+         # Creates a mask for color detection
         mask = cv2.inRange(frame, lower_bound, upper_bound)
  
-        # Atualiza as janelas OpenCV
+        # Updates OpenCV windows
         cv2.imshow('Original Image', cv2.flip(frame,1))
         cv2.imshow('Color Mask', cv2.flip(mask,1))
 
         key = cv2.waitKey(1)
         if key == ord('w'):
-            # Salva os limites em um arquivo JSON
+            # Save limits in a JSON file
             limits = {'limits': {'B': {'max': max_b,'min': min_b}, 'G': { 'max': max_g, 'min': min_g}, 'R': {'max': max_r,'min': min_r}}}
         
 
