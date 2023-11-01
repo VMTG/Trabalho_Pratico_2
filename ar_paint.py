@@ -307,6 +307,7 @@ def main():
     started_draw = False
 
     if use_grid:
+        print('Using a grid as a canvas') 
         zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
         color_numbers = []
@@ -322,6 +323,9 @@ def main():
 
     if not use_cam and not use_grid:
         print('Using a white canvas as a canvas') 
+
+    if usp:
+        print('Using shake prevention mode') 
 
     if use_cam:
         print('Using camera frames as a canvas') 
