@@ -335,7 +335,7 @@ def main():
         mouse = Mouse()
         cv2.setMouseCallback("Paint Window", mouse.update_mouse)
     elif not use_mouse:
-        print('Using an object to paint') 
+        print('Using an displayed object to paint') 
 
     ## Operação em contínuo ##
     while True:
