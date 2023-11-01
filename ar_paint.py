@@ -102,6 +102,7 @@ def key_Press(key_input,canvas,draw_moves):
         return False
         # change color to Red
     elif key_input=='r':
+        print("Changed Color to Red")
         draw_color = (0,0,255)
         # change color to Green
     elif key_input=='g':
@@ -238,6 +239,36 @@ def draw_Grid(frame, contours, numbers):
     # draw the contours and return the result
     return cv2.drawContours(frame, contours, -1, color, 3)
 
+def calc_accuracy(frame, contours, zone_numbers, num_colors):
+
+    height,width,_ = frame.shape
+    total_pixels = height*width
+
+    right_pixels = 0 # this will hold the number of pixels with the correct color
+    # for each zone...
+    for i in range(len(contours)):
+
+        c = contours[i]                             # the zone
+        zone_number = zone_numbers[i]               # the zone number
+        color = num_colors[zone_number-1]           # the zone color
+
+        # corners of this zone (zones are always rectangles)
+        minX = c[0][0][0]
+        maxX = c[2][0][0]
+        minY = c[0][0][1]
+        maxY = c[1][0][1]
+
+        _,_,depth = frame.shape
+
+        # evaluate each pixel
+        for pixel_row in frame[minY:maxY, minX:maxX, 0:depth]:
+            for pixel in pixel_row:
+                pixel = (pixel[0], pixel[1], pixel[2])
+                right_pixels += 1 if pixel==color else 0
+
+    # compute accuracy
+    return int((right_pixels/total_pixels)*100)
+
 def main():
     global draw_color, pencil_thickness
 
@@ -247,14 +278,14 @@ def main():
     # setting up the video capture
     capture = cv2.VideoCapture(0)
     _, frame = capture.read()
-    cv2.imshow("Original window",frame)
-    cv2.moveWindow("Original window", 0, 10)
+    # cv2.imshow("Original window",frame)
+    # cv2.moveWindow("Original window", 0, 10)
 
     height,width,_ = np.shape(frame)
     paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
-    cv2.moveWindow("Paint Window", 525, 735)
+    cv2.moveWindow("Paint Window", 640, 735)
     
     range_lows = (ranges['B']['min'], ranges['G']['min'], ranges['R']['min'])
     range_highs = (ranges['B']['max'], ranges['G']['max'], ranges['R']['max'])
@@ -297,12 +328,14 @@ def main():
         frame_mask = cv2.inRange(flipped_frame, range_lows, range_highs)
 
         frame_wMask = cv2.bitwise_and(flipped_frame,flipped_frame, mask = frame_mask)
-        cv2.imshow("Original window",frame_wMask)
+        
 
         if not use_mouse:    
             (cx,cy),frame_test,skip = get_Centroid(frame_mask)
             cv2.imshow("Centroid window", frame_test)
-            cv2.moveWindow("Centroid window", 1050, 10)
+            cv2.moveWindow("Centroid window", 1360, 10)
+            cv2.imshow("Original window",frame_wMask)
+
             if skip: continue
         else:
             cx = mouse.coords[0]
@@ -319,9 +352,7 @@ def main():
 
         if key_chr == "d":
             flag_draw = not flag_draw
-
-        if flag_draw :
-
+        if flag_draw:
             if (cx,cy) != (None,None):
                 if key_chr == "s":
                     draw_moves[len(draw_moves)-1] = (Figure("square",(cox,coy),(cx,cy),draw_color,pencil_thickness))
@@ -348,13 +379,20 @@ def main():
                             draw_moves.append(Figure("line",(cx_last,cy_last),(cx,cy),draw_color,pencil_thickness))
                     except:
                         cx_last,cy_last = cx,cy
-                if k == 0xFF:   #TODO: test pressed 'j' what happens
+                if key_chr != "s" and key_chr != "o" and key_chr != "e" and key_chr != "c":   
                     cox,coy = cx,cy
                     cx_last,cy_last = cx,cy
         else:
+            if key_chr == 'f' and use_grid:
+                print("Finished painting, calculated the accuracy")
+                accuracy_frame = redraw_Painting(operating_frame,draw_moves)
+                accuracy = calc_accuracy(accuracy_frame, zones, color_numbers,numbers_to_colors)
+                stats = colors_Legend(numbers_to_colors, accuracy)
+                cv2.imshow(color_window, stats)
             if key_chr == 'c':
                 draw_moves = []
             cx_last,cy_last = cx,cy
+
         operating_frame = redraw_Painting(operating_frame,draw_moves)
             
         cv2.imshow("Paint Window",operating_frame)
