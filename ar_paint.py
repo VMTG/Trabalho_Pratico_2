@@ -251,8 +251,7 @@ def main():
     cv2.moveWindow("Original window", 0, 10)
 
     height,width,_ = np.shape(frame)
-    scale = 0.68
-    paint_window = np.zeros((int(height*scale),int(width*scale),4))
+    paint_window = np.zeros((height,width,4))
     paint_window.fill(255)
     cv2.imshow("Paint Window",paint_window)
     cv2.moveWindow("Paint Window", 525, 735)
@@ -353,6 +352,8 @@ def main():
                     cox,coy = cx,cy
                     cx_last,cy_last = cx,cy
         else:
+            if key_chr == 'c':
+                draw_moves = []
             cx_last,cy_last = cx,cy
         operating_frame = redraw_Painting(operating_frame,draw_moves)
             
