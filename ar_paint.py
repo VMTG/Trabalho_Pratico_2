@@ -307,7 +307,7 @@ def main():
     started_draw = False
 
     if use_grid:
-        print('Using a grid as a canvas') 
+        print('Using a numbered grid as a canvas') 
         zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
         color_numbers = []
