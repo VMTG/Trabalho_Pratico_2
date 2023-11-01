@@ -123,6 +123,7 @@ def key_Press(key_input,canvas,draw_moves):
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
         name_canvas = 'drawing_' + formatted_date + '.png'
         name_canvas_colored = 'drawing_' + formatted_date + '_colored.jpg'
+        canvas = redraw_Painting(canvas,draw_moves)
         cv2.imwrite(name_canvas, canvas)
         cv2.imwrite(name_canvas_colored, canvas)
     elif key_input==',':
