@@ -100,6 +100,7 @@ def key_Press(key_input,canvas,draw_moves):
     max_threshold = max(height,width)
         # quit program
     if key_input=='q':
+        print('Leaving the program...')
         return False
         # change color to Red
     elif key_input=='r':
