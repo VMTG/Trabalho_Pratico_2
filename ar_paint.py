@@ -18,6 +18,32 @@ pencil_thickness = 5
 shake_threshold = 50
 centroid_area = 0 
 
+#-------------------------------------------------------------------
+#               Classes Used 
+#-------------------------------------------------------------------
+class Mouse:
+    
+    def __init__(self):
+        self.coords = (None,None)
+        self.pressed = False
+
+    def update_mouse(self,event,x,y,flags,param):
+        self.coords = (x,y)
+
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.pressed = True
+        elif event == cv2.EVENT_LBUTTONUP:
+            self.pressed = False
+class Figure:
+
+    def __init__(self,type,origin,final,colour,thickness):
+        self.type = type
+        self.coord_origin = origin
+        self.coord_final = final
+        self.color = colour
+        self.thickness = thickness
+
+
 def init_arguments():
     # Input Arguments
     parser = argparse.ArgumentParser(description='Ar Paint ')
@@ -146,15 +172,6 @@ def key_Press(key_input,canvas,draw_moves):
             print("Shake prevension Threshold: ",shake_threshold/max_threshold*100,"%")
     return True
 
-class Figure:
-
-    def __init__(self,type,origin,final,colour,thickness):
-        self.type = type
-        self.coord_origin = origin
-        self.coord_final = final
-        self.color = colour
-        self.thickness = thickness
-
 def redraw_Painting(frame, figures):
     for step in figures:
         if step.type == "square":
@@ -179,20 +196,6 @@ def redraw_Painting(frame, figures):
         elif step.type == "dot":        
             cv2.circle(frame, step.coord_final, 1, step.color,step.thickness) 
     return frame
-
-class Mouse:
-    
-    def __init__(self):
-        self.coords = (None,None)
-        self.pressed = False
-
-    def update_mouse(self,event,x,y,flags,param):
-        self.coords = (x,y)
-
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.pressed = True
-        elif event == cv2.EVENT_LBUTTONUP:
-            self.pressed = False
 
 def form_Grid(frame):
 
@@ -227,7 +230,7 @@ def colors_Legend(num_colors, accuracy = None):
         cv2.putText(legend, str(i+1) + ' - ' + colour, (50, 50+50*i), cv2.FONT_HERSHEY_SIMPLEX, 0.9, num_colors[i], 2)
 
     if accuracy!=None:
-        cv2.putText(legend, 'Accuracy: ' + str(accuracy) + '%', (50, 200), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
+        cv2.putText(legend, 'Accuracy: ' + str(accuracy) + '%', (50, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255,255,255), 2)
     
     return legend
 
@@ -301,9 +304,9 @@ def main():
     
     draw_moves = []
     flag_draw = False
+    started_draw = False
 
     if use_grid:
-        print('Using grid as a canvas')
         zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
         color_numbers = []
@@ -371,6 +374,7 @@ def main():
 
         if key_chr == "d":
             flag_draw = not flag_draw
+            started_draw = True
         if flag_draw:
             if (cx,cy) != (None,None):
                 if key_chr == "s":
@@ -406,7 +410,10 @@ def main():
             if key_chr == 'f' and use_grid:
                 print("Finished painting, calculated the accuracy")
                 accuracy_frame = redraw_Painting(operating_frame,draw_moves)
-                accuracy = calc_accuracy(accuracy_frame, zones, color_numbers,numbers_to_colors)
+                if started_draw:
+                    accuracy = calc_accuracy(accuracy_frame, zones, color_numbers,numbers_to_colors)
+                else:
+                    accuracy = "NAN"
                 stats = colors_Legend(numbers_to_colors, accuracy)
                 cv2.imshow(color_window, stats)
             if key_chr == 'c':
@@ -420,7 +427,6 @@ def main():
 
     capture.release()
     cv2.destroyAllWindows()
-
 
 if __name__ == '__main__':
     # print("")
