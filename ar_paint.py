@@ -17,7 +17,7 @@ pencil_thickness = 5
 shake_threshold = 50
 centroid_area = 0 
 
-def initialization():
+def init_arguments():
     # Input Arguments
     parser = argparse.ArgumentParser(description='Ar Paint ')
     parser.add_argument('-j','--json',type = str, required= False , help='Full path to json file', default='limits.json')
@@ -46,7 +46,7 @@ def readFile(path):
 
     return limits
 
-def get_centroid(mask) :
+def get_Centroid(mask) :
     # global centroid_area,shake_threshold
     # find all contours (objects)
     cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
@@ -93,7 +93,7 @@ def get_centroid(mask) :
         
     return (cX,cY), image_result, skip
 
-def key_press(key_input,canvas,draw_moves):
+def key_Press(key_input,canvas,draw_moves):
     global draw_color, pencil_thickness, shake_threshold
     height,width,_ = np.shape(canvas)
     max_threshold = max(height,width)
@@ -145,7 +145,7 @@ class Figure:
         self.color = colour
         self.thickness = thickness
 
-def redraw_painting(frame, figures):
+def redraw_Painting(frame, figures):
     for step in figures:
         if step.type == "square":
             cv2.rectangle(frame,step.coord_origin,step.coord_final,step.color,step.thickness)
@@ -184,7 +184,7 @@ class Mouse:
         elif event == cv2.EVENT_LBUTTONUP:
             self.pressed = False
 
-def form_grid(frame):
+def form_Grid(frame):
 
     height,width,_ = frame.shape
     grid = np.zeros([height,width],dtype=np.uint8)
@@ -209,7 +209,7 @@ def form_grid(frame):
 
     return contours, numbers_to_colors
             
-def colors_legend(num_colors, accuracy = None):
+def colors_Legend(num_colors, accuracy = None):
     legend = np.zeros([300,350,3],dtype=np.uint8)
 
     for i in range(3):
@@ -221,7 +221,7 @@ def colors_legend(num_colors, accuracy = None):
     
     return legend
 
-def draw_grid(frame, contours, numbers):
+def draw_Grid(frame, contours, numbers):
     # grid and numbers will be white
     color = (0,0,0)
 
@@ -241,7 +241,7 @@ def draw_grid(frame, contours, numbers):
 def main():
     global draw_color, pencil_thickness
 
-    path, usp, use_cam, use_mouse, use_grid = initialization()
+    path, usp, use_cam, use_mouse, use_grid = init_arguments()
     ranges = readFile(path) 
 
     # setting up the video capture
@@ -264,22 +264,18 @@ def main():
     flag_draw = False
 
     if use_grid:
-        zones, numbers_to_colors = form_grid(paint_window)
+        zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
         color_numbers = []
         for _ in range(num_zones):
             color_numbers.append(randint(1,3))
 
-        # display the grid and numbers
-        # setting up the window the coloring accuracy
-
-        # show the legend of colors to be used
-        stats = colors_legend(numbers_to_colors)
+        stats = colors_Legend(numbers_to_colors)
         color_window = 'Color map'
+
         cv2.namedWindow(color_window, cv2.WINDOW_NORMAL)
         cv2.moveWindow(color_window, 100, 600)
         cv2.imshow(color_window, stats)
-        print("test")
 
     if use_mouse:
         mouse = Mouse()
@@ -290,10 +286,11 @@ def main():
         _,frame = capture.read()
         flipped_frame = cv2.flip(frame, 1)
         paint_window.fill(255)
+
         if use_cam: 
             operating_frame = flipped_frame
         elif use_grid:
-            grid_window = draw_grid(paint_window, zones, color_numbers)
+            grid_window = draw_Grid(paint_window, zones, color_numbers)
             operating_frame = grid_window
         else:
             operating_frame = paint_window
@@ -304,7 +301,7 @@ def main():
         cv2.imshow("Original window",frame_wMask)
 
         if not use_mouse:    
-            (cx,cy),frame_test,skip = get_centroid(frame_mask)
+            (cx,cy),frame_test,skip = get_Centroid(frame_mask)
             cv2.imshow("Centroid window", frame_test)
             cv2.moveWindow("Centroid window", 1050, 10)
             if skip: continue
@@ -315,12 +312,11 @@ def main():
             if cx:
                 cv2.line(operating_frame, (cx-5, cy-5), (cx+5, cy+5), (0, 0, 255), 5)
                 cv2.line(operating_frame, (cx+5, cy-5), (cx-5, cy+5), (0, 0, 255), 5)
-    
 
         k = cv2.waitKey(1) & 0xFF
 
         key_chr = str(chr(k))
-        if not key_press(key_chr,operating_frame,draw_moves): break
+        if not key_Press(key_chr,operating_frame,draw_moves): break
 
         if key_chr == "d":
             flag_draw = not flag_draw
@@ -356,10 +352,10 @@ def main():
                 if k == 0xFF:   #TODO: test pressed 'j' what happens
                     cox,coy = cx,cy
                     cx_last,cy_last = cx,cy
-    
-            operating_frame = redraw_painting(operating_frame,draw_moves)
+        else:
+            cx_last,cy_last = cx,cy
+        operating_frame = redraw_Painting(operating_frame,draw_moves)
             
-
         cv2.imshow("Paint Window",operating_frame)
 
     capture.release()
