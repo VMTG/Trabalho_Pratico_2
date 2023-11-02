@@ -479,16 +479,20 @@ def main():
         cv2.namedWindow(color_window, cv2.WINDOW_NORMAL)
         cv2.moveWindow(color_window, 100, 600)
         cv2.imshow(color_window, stats)
-    # For the mode to use the mouse as pencil
+        
+    # For the mode to use normal blank canvas
     if not use_cam and not use_grid:
         print('Using a white canvas as a canvas') 
-
+    
+    # For the mode to use shake prevention mode
     if usp:
         print('Using shake prevention mode') 
 
+    # For the mode to use the cam as canvas
     if use_cam:
         print('Using camera frames as a canvas') 
 
+    # For the mode to use the mouse as pencil
     if use_mouse:
         print('Using the mouse to paint')
         mouse = Mouse()
