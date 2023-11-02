@@ -10,18 +10,15 @@ import json
 def update_limits(x):
     pass
 
-
-
-
 def main():
 
     # setting up the video capture
     cap = cv2.VideoCapture(0)
     _, frame = cap.read()
     
-    #dimensions for both windows
-    scale_x = 0.72
-    scale_y = 0.9
+    # dimensions for both windows
+    scale_x = 1.2
+    scale_y = 1.2
     window_width = int(frame.shape[1] * scale_x)
     window_height = int(frame.shape[0] * scale_y)
     
@@ -29,7 +26,7 @@ def main():
     window_name = 'Original Image'
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, window_width, window_height)
-    cv2.moveWindow(window_name, 5, 200)
+    cv2.moveWindow(window_name, 100, 200)
     mask_window = 'Color Mask'
     cv2.namedWindow(mask_window, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(mask_window, window_width, window_height)
