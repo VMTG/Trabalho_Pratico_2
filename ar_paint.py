@@ -218,13 +218,14 @@ def key_Press(key_input,canvas,draw_moves):
             print("Increase pencil size")
         # save canvas 
     elif key_input=='w' and draw_moves != []:
-        print("Save obtained drawing")
         # Regists the current time
         date = datetime.now()
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
         # Creates the 2 files (.png and .jpg)
         name_canvas = 'drawing_' + formatted_date + '.png'
         name_canvas_colored = 'drawing_' + formatted_date + '_colored.jpg'
+
+        print("Save obtained drawing as ",name_canvas, " and ", name_canvas_colored)
         canvas = redraw_Painting(canvas,draw_moves)
         # Saves both as "drawing_DATE"
         cv2.imwrite(name_canvas, canvas)            #.png
@@ -502,6 +503,9 @@ def main():
     #---------------------------------------------------------------------
     #                       Continuous Operations
     #---------------------------------------------------------------------
+
+    print("\nType 'd' to Start drawing:")
+
     while True:
         # Setup camera 
         _,frame = capture.read()
@@ -550,6 +554,8 @@ def main():
         # Start/Continue/Stop of the Drawing if "d" is pressed
         if key_chr == "d":
             flag_draw = not flag_draw
+            if not flag_draw:print("Not Drawing...")
+            if flag_draw:print("Drawing...")
             started_draw = True
         if flag_draw:
             if (cx,cy) != (None,None):
@@ -624,5 +630,5 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    # print("")
+    print("2nd Pratical Project for PSR 23/24")
     main()
