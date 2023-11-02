@@ -192,6 +192,7 @@ def key_Press(key_input,canvas,draw_moves):
     max_threshold = max(height,width)
         # quit program
     if key_input=='q':
+        print('Leaving the program...')
         return False
         # change color to Red
     elif key_input=='r':
@@ -199,20 +200,25 @@ def key_Press(key_input,canvas,draw_moves):
         draw_color = (0,0,255)
         # change color to Green
     elif key_input=='g':
+        print("Changed Color to Green")
         draw_color = (0,255,0)
         # change color to Blue
     elif key_input=='b':
+        print("Changed Color to Blue")
         draw_color = (255,0,0)
         # decrease pencil size
     elif key_input=='-':
         if pencil_thickness > 0:
             pencil_thickness -= 5
+            print("Decrease pencil size")
         # increase pencil size
     elif key_input=='+':
         if pencil_thickness < 50:
             pencil_thickness += 5
+            print("Increase pencil size")
         # save canvas 
     elif key_input=='w' and draw_moves != []:
+        print("Save obtained drawing")
         # Regists the current time
         date = datetime.now()
         formatted_date = date.strftime("%a_%b_%d_%H:%M:%S")
@@ -227,11 +233,13 @@ def key_Press(key_input,canvas,draw_moves):
     elif key_input==',':
         if shake_threshold > 0:
             shake_threshold -= 50 
+            print("Decrease shake threshold")
             print("Shake prevension Threshold: ",shake_threshold/max_threshold*100,"%")
         # decrease shake threshold
     elif key_input=='.':
         if shake_threshold < (max_threshold-50):
             shake_threshold += 50
+            print("Increase shake threshold")
             print("Shake prevension Threshold: ",shake_threshold/max_threshold*100,"%")
     return True
 
@@ -457,7 +465,7 @@ def main():
     
     # For the mode to paint in the divided Zones  
     if use_grid:
-        print("Mode Grid")
+        print('Using a numbered grid as a canvas') 
         # Creates the Zones with the respective numbers corresponding colors
         zones, numbers_to_colors = form_Grid(paint_window)
         num_zones = len(zones)
@@ -472,9 +480,21 @@ def main():
         cv2.moveWindow(color_window, 100, 600)
         cv2.imshow(color_window, stats)
     # For the mode to use the mouse as pencil
+    if not use_cam and not use_grid:
+        print('Using a white canvas as a canvas') 
+
+    if usp:
+        print('Using shake prevention mode') 
+
+    if use_cam:
+        print('Using camera frames as a canvas') 
+
     if use_mouse:
+        print('Using the mouse to paint')
         mouse = Mouse()
         cv2.setMouseCallback("Paint Window", mouse.update_mouse)
+    elif not use_mouse:
+        print('Using an displayed object to paint') 
     #---------------------------------------------------------------------
     #                       Continuous Operations
     #---------------------------------------------------------------------
@@ -543,6 +563,7 @@ def main():
                     cx_last,cy_last = cx,cy
                 # To clean the canvas
                 elif key_chr == 'c':
+                    print('Clear canvas')
                     draw_moves = []
                     cx_last,cy_last = cx,cy
                 # Else draw lines or dots following the pencil
@@ -587,6 +608,7 @@ def main():
                 cv2.imshow(color_window, stats)
             # To clean the canvas
             if key_chr == 'c':
+                print('Clear canvas')
                 draw_moves = []
             cx_last,cy_last = cx,cy
         # re-draws all the actions to reproduce the sum of previous and current drawings in the current frame 
